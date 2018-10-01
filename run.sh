@@ -13,6 +13,6 @@ if [ ! -d "build" ]; then
   mkdir build
 fi
 
-scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ubuntu@127.0.0.1:~/ubuntu-backpack-biblio.iso build/ubuntu-postgresql.iso
+scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ubuntu@127.0.0.1:~/ubuntu-postgresql.iso build/ubuntu-postgresql.iso
 
 echo "Successfully generated ubuntu-postgresql.iso"

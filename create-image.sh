@@ -124,6 +124,12 @@ apt-get -y update
 DEBIAN_FRONTEND=noninteractive apt-get -y install tmpreaper
 mv /etc/custom_tmpreaper.conf /etc/tmpreaper.conf
 
+# Install PostgreSQL v10
+wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O - | apt-key add -
+echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list
+apt-get update
+apt-get install postgresql postgresql-contrib
+
 echo "session required pam_limits.so" >> /etc/pam.d/common-session
 
 # Mask irqbalance to avoid problems associated with VMWare.
@@ -133,6 +139,7 @@ echo "session required pam_limits.so" >> /etc/pam.d/common-session
 systemctl mask irqbalance
 
 systemctl daemon-reload
+systemctl enable postgresql
 
 apt-get install --fix-missing
 apt-get update -y --fix-missing
