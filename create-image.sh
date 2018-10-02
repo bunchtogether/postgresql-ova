@@ -141,6 +141,9 @@ systemctl mask irqbalance
 systemctl daemon-reload
 systemctl enable postgresql
 
+# Sysctl Settings
+echo "vm.overcommit_memory=2" > /etc/sysctl.conf;
+
 apt-get install --fix-missing
 apt-get update -y --fix-missing
 apt-get dist-upgrade -y --fix-missing
