@@ -42,11 +42,15 @@ sudo cp ~/id_rsa ~/custom-image/edit/home/ubuntu/.ssh/id_rsa
 sudo chmod 0644 ~/custom-image/edit/home/ubuntu/.ssh/authorized_keys
 sudo chmod 0600 ~/custom-image/edit/home/ubuntu/.ssh/id_rsa
 
-# Copying Biblio App
-sudo mkdir -p ~/custom-image/edit/data
+# Copy Configuration Scripts
+sudo mkdir -p ~/custom-image/edit/buildconf
+sudo cp ~/etcd_peers ~/custom-image/edit/buildconf/etcd_peers
+sudo cp ~/glances.conf ~/custom-image/edit/buildconf/glances.conf
+sudo cp ~/start_etcd.sh ~/custom-image/edit/buildconf/start_etcd.sh
+sudo cp ~/post_setup_cluster.sh ~/custom-image/edit/buildconf/post_setup_cluster.sh
+sudo cp ~/postgres.yml ~/custom-image/edit/buildconf/postgres.yml
 
 sudo mount --bind /dev/ edit/dev
-
 sudo bash -c "cat > ~/custom-image/edit/usr/sbin/policy-rc.d" <<EOL
 exit 101
 #!/bin/sh
@@ -61,6 +65,85 @@ TMPREAPER_DIRS='/tmp/. /var/tmp/.'
 TMPREAPER_DELAY='256'
 TMPREAPER_ADDITIONALOPTIONS=''
 EOL
+
+sudo bash -c "cat >  ~/custom-image/edit/etc/systemd/system/glances.service" <<EOL
+[Unit]
+Description=Glances
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/glances -C /glances.conf -w --percpu -p 80 --fs-free-space --disable-check-update --hide-kernel-threads --time 1 
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
+
+sudo bash -c "cat >  ~/custom-image/edit/etc/systemd/system/etcd.service" <<EOL
+[Unit]
+Description=etcd
+Documentation=https://github.com/coreos/etcd
+Conflicts=etcd.service
+
+[Service]
+Type=notify
+Restart=always
+RestartSec=5s
+LimitNOFILE=40000
+TimeoutStartSec=0
+
+ExecStart=etcd --name etcd \
+    --data-dir /var/lib/etcd \
+    --listen-client-urls http://${IP_1}:2379 \
+    --advertise-client-urls http://${IP_1}:2379 \
+    --listen-peer-urls http://${IP_1}:2380 \
+    --initial-advertise-peer-urls http://${IP_1}:2380 \
+    --initial-cluster etcd=http://${IP_1}:2380,etcd=http://${IP_2}:2380 \
+    --initial-cluster-token etcd-secret-token \
+    --initial-cluster-state new
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
+sudo bash -c "cat >  ~/custom-image/edit/etc/systemd/system/patroni.service" <<EOL
+[Unit]
+Description=PostgreSQL high-availability orchestration
+After=syslog.target network.target etcd.target
+
+[Service]
+Type=simple
+User=postgres
+Group=postgres
+
+# Read in configuration file if it exists, otherwise proceed
+EnvironmentFile=-/etc/patroni_env.conf
+
+WorkingDirectory=/patroni
+
+# Where to send early-startup messages from the server
+# This is normally controlled by the global default set by systemd
+# StandardOutput=syslog
+
+ExecStart=/usr/local/bin/patroni /patroni/patroni.yml
+
+# Send HUP to reload from patroni.yml
+ExecReload=/bin/kill -s HUP $MAINPID
+
+# only kill the patroni process, not it's children, so it will gracefully stop postgres
+KillMode=process
+
+# Give a reasonable amount of time for the server to start up/shut down
+TimeoutSec=30
+
+# Do not restart the service if it crashes, we want to manually inspect database on failure
+Restart=no
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
 
 sudo bash -c "cat > ~/custom-image/edit/etc/issue" <<EOL
 //////////////////////////////////////   @@@@@
@@ -109,15 +192,19 @@ dpkg-divert --local --rename --add /sbin/initctl
 ln -s /bin/true /sbin/initctl
 chmod +x /usr/sbin/policy-rc.d
 
-apt-get update -y --fix-missing
-apt-get dist-upgrade -y --fix-missing
-apt-get install software-properties-common wget apt-transport-https git curl openssh-server libpam-systemd openssl python vim -y
-
 # Enable Ubuntu repos
 add-apt-repository main
 add-apt-repository universe
 add-apt-repository restricted
 add-apt-repository multiverse
+
+# Install packages
+apt-get update -y --fix-missing
+apt-get dist-upgrade -y --fix-missing
+apt-get install software-properties-common wget apt-transport-https git curl openssh-server libpam-systemd openssl python3 python3-pip vim -y
+
+# Install Glances
+pip3 install 'glances[action,browser,cloud,cpuinfo,chart,folders,ip,raid,web]' 
 
 # Install tmpreaper
 apt-get -y update
@@ -128,7 +215,39 @@ mv /etc/custom_tmpreaper.conf /etc/tmpreaper.conf
 wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O - | apt-key add -
 echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list
 apt-get update
-apt-get install postgresql postgresql-contrib
+apt-get install postgresql postgresql-contrib -y
+
+# Install Etcd
+curl -L https://github.com/etcd-io/etcd/releases/download/v3.3.9/etcd-v3.3.9-linux-amd64.tar.gz -o /opt/etcd-v3.3.9-linux-amd64.tar.gz
+tar xzvf /opt/etcd-v3.3.9-linux-amd64.tar.gz -C /opt
+cp /opt/etcd-v3.3.9-linux-amd64/etcd /bin/
+cp /opt/etcd-v3.3.9-linux-amd64/etcdctl /bin/
+rm -rf /opt/etcd-v3.3.9-linux-amd64*
+
+# Install Petroni
+pip3 install patroni[etcd]
+
+# Setup directories
+mkdir -p /data/postgres
+mkdir -p /patroni
+mkdir -p /etcd/data
+
+# Copy config scripts
+# Etcd
+mv /buildconf/etcd_peers /etcd/etcd_peers
+mv /buildconf/start_etcd.sh /etcd/start_etcd.sh
+chmod +x /etcd/start_etcd.sh
+
+# Glances
+mv /buildconf/glances.conf /glances.conf
+
+# Patroni
+mv /buildconf/post_setup_cluster.sh /patroni/post_setup_cluster.sh
+mv /buildconf/postgres.yml /patroni/postgres.yml
+chmod +x /patroni/post_setup_cluster.sh
+
+# Change directory permissions
+chown -R postgres:postgres /patroni
 
 echo "session required pam_limits.so" >> /etc/pam.d/common-session
 
@@ -139,7 +258,9 @@ echo "session required pam_limits.so" >> /etc/pam.d/common-session
 systemctl mask irqbalance
 
 systemctl daemon-reload
-systemctl enable postgresql
+systemctl enable etcd
+systemctl enable glances
+systemctl enable patroni
 
 # Sysctl Settings
 echo "vm.overcommit_memory=2" > /etc/sysctl.conf;
