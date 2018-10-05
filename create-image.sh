@@ -119,7 +119,7 @@ WorkingDirectory=/patroni
 # This is normally controlled by the global default set by systemd
 # StandardOutput=syslog
 
-ExecStart=/usr/local/bin/patroni /patroni/patroni.yml
+ExecStart=/usr/local/bin/patroni /patroni/postgresql.yml
 
 # Send HUP to reload from patroni.yml
 ExecReload=/bin/kill -s HUP $MAINPID

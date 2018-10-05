@@ -1,18 +1,18 @@
 scope: postgresql
 namespace: /postgres/
-name: postgresql1
+name: postgresql
 
 restapi:
   listen: 0.0.0.0:8008
   connect_address: 0.0.0.0:8008
-  certfile: /etc/ssl/certs/ssl-cert-snakeoil.pem
-  keyfile: /etc/ssl/private/ssl-cert-snakeoil.key
-  authentication:
-    username: patrini
-    password: xayohgEVN1qcKQ3M
+  # certfile: /etc/ssl/certs/ssl-cert-snakeoil.pem
+  # keyfile: /etc/ssl/private/ssl-cert-snakeoil.key
+  # authentication:
+  #   username: patrini
+  #   password: xayohgEVN1qcKQ3M
 
-ctl:
-  insecure: false # Allow connections to SSL sites without certs
+# ctl:
+#   insecure: false # Allow connections to SSL sites without certs
 
 etcd:
   host: 0.0.0.0:2379
@@ -46,9 +46,8 @@ bootstrap:
   - data-checksums
 
   pg_hba:  # Add following lines to pg_hba.conf after running 'initdb'
-  - host replication replicator 127.0.0.1/24 md5
+  - host replication replicator 0.0.0.0/0 md5 # Change 0.0.0.0/0 to local IP Address
   - host all all 0.0.0.0/0 md5
-  - hostssl all all 0.0.0.0/0 md5
 
   # Additional script to be launched after initial cluster creation (will be passed the connection URL as parameter)
   post_init: /patroni/post_setup_cluster.sh
