@@ -20,7 +20,8 @@ sudo tlsdate -s -H mail.google.com
 sudo timedatectl set-local-rtc false
 timedatectl
 
-aria2c --seed-time=0 --summary-interval=3 http://releases.ubuntu.com/16.04.5/ubuntu-16.04.5-server-amd64.iso.torrent
+# aria2c --seed-time=0 --summary-interval=3 http://releases.ubuntu.com/16.04.5/ubuntu-16.04.5-server-amd64.iso.torrent
+aria2c -x 16 -s 16 -k 4M -o ubuntu-16.04.5-server-amd64.iso http://releases.ubuntu.com/16.04.5/ubuntu-16.04.5-server-amd64.iso
 
 mkdir mnt
 sudo mount -o loop ~/custom-image/ubuntu*.iso mnt
@@ -93,15 +94,7 @@ RestartSec=5s
 LimitNOFILE=40000
 TimeoutStartSec=0
 
-ExecStart=etcd --name etcd \
-    --data-dir /var/lib/etcd \
-    --listen-client-urls http://${IP_1}:2379 \
-    --advertise-client-urls http://${IP_1}:2379 \
-    --listen-peer-urls http://${IP_1}:2380 \
-    --initial-advertise-peer-urls http://${IP_1}:2380 \
-    --initial-cluster etcd=http://${IP_1}:2380,etcd=http://${IP_2}:2380 \
-    --initial-cluster-token etcd-secret-token \
-    --initial-cluster-state new
+ExecStart=/etcd/start_etcd.sh
 
 [Install]
 WantedBy=multi-user.target
@@ -192,16 +185,20 @@ dpkg-divert --local --rename --add /sbin/initctl
 ln -s /bin/true /sbin/initctl
 chmod +x /usr/sbin/policy-rc.d
 
+# Install packages
+apt-get update -y --fix-missing
+apt-get dist-upgrade -y --fix-missing
+apt-get install software-properties-common wget apt-transport-https git curl openssh-server libpam-systemd openssl python3 vim -y
+
 # Enable Ubuntu repos
 add-apt-repository main
 add-apt-repository universe
 add-apt-repository restricted
 add-apt-repository multiverse
-
-# Install packages
 apt-get update -y --fix-missing
-apt-get dist-upgrade -y --fix-missing
-apt-get install software-properties-common wget apt-transport-https git curl openssh-server libpam-systemd openssl python3 python3-pip vim -y
+
+# Install pip
+apt-get install -y python3-pip
 
 # Install Glances
 pip3 install 'glances[action,browser,cloud,cpuinfo,chart,folders,ip,raid,web]' 
@@ -248,6 +245,7 @@ chmod +x /patroni/post_setup_cluster.sh
 
 # Change directory permissions
 chown -R postgres:postgres /patroni
+chown -R postgres:postgres /data
 
 echo "session required pam_limits.so" >> /etc/pam.d/common-session
 
@@ -258,6 +256,7 @@ echo "session required pam_limits.so" >> /etc/pam.d/common-session
 systemctl mask irqbalance
 
 systemctl daemon-reload
+systemctl disable postgresql
 systemctl enable etcd
 systemctl enable glances
 systemctl enable patroni

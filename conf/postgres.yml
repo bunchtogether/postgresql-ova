@@ -46,7 +46,7 @@ bootstrap:
   - data-checksums
 
   pg_hba:  # Add following lines to pg_hba.conf after running 'initdb'
-  - host replication replicator 10.0.1.0/24 md5
+  - host replication replicator 127.0.0.1/24 md5
   - host all all 0.0.0.0/0 md5
   - hostssl all all 0.0.0.0/0 md5
 
@@ -63,10 +63,10 @@ bootstrap:
 
 postgresql:
   listen: 0.0.0.0:5432
-  connect_address: 10.0.1.71:5432
+  connect_address: 0.0.0.0:5432
   data_dir: /data/postgresql
   bin_dir: /usr/lib/postgresql/10/bin
-  config_dir: /patroni/postgresql
+  # config_dir: /patroni/postgresql
   pgpass: /patroni/pgpass
   authentication:
     replication:
