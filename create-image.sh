@@ -43,13 +43,23 @@ sudo cp ~/id_rsa ~/custom-image/edit/home/ubuntu/.ssh/id_rsa
 sudo chmod 0644 ~/custom-image/edit/home/ubuntu/.ssh/authorized_keys
 sudo chmod 0600 ~/custom-image/edit/home/ubuntu/.ssh/id_rsa
 
+sudo mkdir -p ~/custom-image/edit/var/lib/postgresql/.ssh
+sudo cp ~/rsync.pub ~/custom-image/edit/var/lib/postgresql/.ssh/authorized_keys
+sudo cp ~/rsync ~/custom-image/edit/var/lib/postgresql/.ssh/rsync
+sudo bash -c "cat > ~/custom-image/edit/var/lib/postgresql/.ssh/config" <<EOL
+Host *
+  IdentityFile ~/.ssh/rsync
+EOL
+sudo chmod 0644 ~/custom-image/edit/var/lib/postgresql/.ssh/authorized_keys
+sudo chmod 0644 ~/custom-image/edit/var/lib/postgresql/.ssh/config
+sudo chmod 0600 ~/custom-image/edit/var/lib/postgresql/.ssh/rsync
+
 # Copy Configuration Scripts
-sudo mkdir -p ~/custom-image/edit/buildconf
-sudo cp ~/etcd_peers ~/custom-image/edit/buildconf/etcd_peers
-sudo cp ~/glances.conf ~/custom-image/edit/buildconf/glances.conf
-sudo cp ~/start_etcd.sh ~/custom-image/edit/buildconf/start_etcd.sh
-sudo cp ~/post_setup_cluster.sh ~/custom-image/edit/buildconf/post_setup_cluster.sh
-sudo cp ~/postgres.yml ~/custom-image/edit/buildconf/postgres.yml
+sudo cp ~/glances.conf ~/custom-image/edit/glances.conf
+sudo cp ~/postgresql.conf ~/custom-image/edit/postgresql.conf
+sudo cp ~/pg_hba.conf ~/custom-image/edit/pg_hba.conf
+sudo cp ~/recovery.conf ~/custom-image/edit/recovery.conf
+
 
 sudo mount --bind /dev/ edit/dev
 sudo bash -c "cat > ~/custom-image/edit/usr/sbin/policy-rc.d" <<EOL
@@ -80,63 +90,23 @@ Restart=on-abort
 WantedBy=multi-user.target
 EOL
 
-
-sudo bash -c "cat >  ~/custom-image/edit/etc/systemd/system/etcd.service" <<EOL
+sudo bash -c "cat >  ~/custom-image/edit/etc/systemd/system/pg.service" <<EOL
 [Unit]
-Description=etcd
-Documentation=https://github.com/coreos/etcd
-Conflicts=etcd.service
+Description=PostgreSQL database server
+Documentation=man:postgres(1)
 
 [Service]
 Type=notify
-Restart=always
-RestartSec=5s
-LimitNOFILE=40000
-TimeoutStartSec=0
-
-ExecStart=/etcd/start_etcd.sh
-
-[Install]
-WantedBy=multi-user.target
-EOL
-
-sudo bash -c "cat >  ~/custom-image/edit/etc/systemd/system/patroni.service" <<EOL
-[Unit]
-Description=PostgreSQL high-availability orchestration
-After=syslog.target network.target etcd.target
-
-[Service]
-Type=simple
 User=postgres
-Group=postgres
-
-# Read in configuration file if it exists, otherwise proceed
-EnvironmentFile=-/etc/patroni_env.conf
-
-WorkingDirectory=/patroni
-
-# Where to send early-startup messages from the server
-# This is normally controlled by the global default set by systemd
-# StandardOutput=syslog
-
-ExecStart=/usr/local/bin/patroni /patroni/postgresql.yml
-
-# Send HUP to reload from patroni.yml
-ExecReload=/bin/kill -s HUP $MAINPID
-
-# only kill the patroni process, not it's children, so it will gracefully stop postgres
-KillMode=process
-
-# Give a reasonable amount of time for the server to start up/shut down
-TimeoutSec=30
-
-# Do not restart the service if it crashes, we want to manually inspect database on failure
-Restart=no
+ExecStart=/usr/lib/postgresql/10/bin/postgres -D /etc/postgresql/10/main
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+KillSignal=SIGINT
+TimeoutSec=0
 
 [Install]
 WantedBy=multi-user.target
 EOL
-
 
 sudo bash -c "cat > ~/custom-image/edit/etc/issue" <<EOL
 //////////////////////////////////////   @@@@@
@@ -214,38 +184,18 @@ echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" 
 apt-get update
 apt-get install postgresql postgresql-contrib -y
 
-# Install Etcd
-curl -L https://github.com/etcd-io/etcd/releases/download/v3.3.9/etcd-v3.3.9-linux-amd64.tar.gz -o /opt/etcd-v3.3.9-linux-amd64.tar.gz
-tar xzvf /opt/etcd-v3.3.9-linux-amd64.tar.gz -C /opt
-cp /opt/etcd-v3.3.9-linux-amd64/etcd /bin/
-cp /opt/etcd-v3.3.9-linux-amd64/etcdctl /bin/
-rm -rf /opt/etcd-v3.3.9-linux-amd64*
-
-# Install Petroni
-pip3 install patroni[etcd]
-
 # Setup directories
-mkdir -p /data/postgres
-mkdir -p /patroni
-mkdir -p /etcd/data
-
-# Copy config scripts
-# Etcd
-mv /buildconf/etcd_peers /etcd/etcd_peers
-mv /buildconf/start_etcd.sh /etcd/start_etcd.sh
-chmod +x /etcd/start_etcd.sh
-
-# Glances
-mv /buildconf/glances.conf /glances.conf
-
-# Patroni
-mv /buildconf/post_setup_cluster.sh /patroni/post_setup_cluster.sh
-mv /buildconf/postgres.yml /patroni/postgres.yml
-chmod +x /patroni/post_setup_cluster.sh
-
-# Change directory permissions
-chown -R postgres:postgres /patroni
+mkdir -p /data
 chown -R postgres:postgres /data
+chmod -R 0700 /data
+
+# Copy PostgreSQL config files
+mkdir -p /etc/postgresql/10/main/
+mv /postgresql.conf /etc/postgresql/10/main/postgresql.conf
+mv /pg_hba.conf /etc/postgresql/10/main/pg_hba.conf
+mv /recovery.conf /data/recovery.conf
+chown -R postgres:postgres /etc/postgresql/10
+openssl dhparam -out /etc/ssl/dhparam.pem 2048
 
 echo "session required pam_limits.so" >> /etc/pam.d/common-session
 
@@ -256,10 +206,9 @@ echo "session required pam_limits.so" >> /etc/pam.d/common-session
 systemctl mask irqbalance
 
 systemctl daemon-reload
-systemctl disable postgresql
-systemctl enable etcd
+# Enable pg.service after cluster setup
+# systemctl enable pg
 systemctl enable glances
-systemctl enable patroni
 
 # Sysctl Settings
 echo "vm.overcommit_memory=2" > /etc/sysctl.conf;

@@ -3,14 +3,17 @@ set -e
 
 # Copy SSH Key
 scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./credentials/id_rsa.pub ubuntu@127.0.0.1:~/id_rsa.pub
-scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./credentials/id_rsa ubuntu@127.0.0.1:~/id_rsa
+scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./credentials/rsync ubuntu@127.0.0.1:~/rsync
+scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./credentials/rsync.pub ubuntu@127.0.0.1:~/rsync.pub
 
 # Copy configuration files
-scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./conf/postgres.yml ubuntu@127.0.0.1:~/postgres.yml
-scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./conf/post_setup_cluster.sh ubuntu@127.0.0.1:~/post_setup_cluster.sh
-scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./conf/etcd_peers ubuntu@127.0.0.1:~/etcd_peers
-scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./conf/start_etcd.sh ubuntu@127.0.0.1:~/start_etcd.sh
 scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./conf/glances.conf ubuntu@127.0.0.1:~/glances.conf
+
+# Copy PostgreSQL Config files
+scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./conf/postgresql.conf ubuntu@127.0.0.1:~/postgresql.conf
+scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./conf/pg_hba.conf ubuntu@127.0.0.1:~/pg_hba.conf
+scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./conf/recovery.conf ubuntu@127.0.0.1:~/recovery.conf
+
 
 # Create Image script
 scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./create-image.sh ubuntu@127.0.0.1:~/create-image.sh
