@@ -2,6 +2,7 @@
 set -e
 
 # Copy SSH Key
+# scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./credentials/id_rsa ubuntu@127.0.0.1:~/id_rsa
 scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./credentials/id_rsa.pub ubuntu@127.0.0.1:~/id_rsa.pub
 scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./credentials/rsync ubuntu@127.0.0.1:~/rsync
 scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ./credentials/rsync.pub ubuntu@127.0.0.1:~/rsync.pub

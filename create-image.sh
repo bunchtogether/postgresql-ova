@@ -39,9 +39,9 @@ EOL
 sudo mkdir -p ~/custom-image/edit/root/.ssh
 sudo mkdir -p ~/custom-image/edit/home/ubuntu/.ssh
 sudo cp ~/id_rsa.pub ~/custom-image/edit/home/ubuntu/.ssh/authorized_keys
-sudo cp ~/id_rsa ~/custom-image/edit/home/ubuntu/.ssh/id_rsa
 sudo chmod 0644 ~/custom-image/edit/home/ubuntu/.ssh/authorized_keys
-sudo chmod 0600 ~/custom-image/edit/home/ubuntu/.ssh/id_rsa
+# sudo cp ~/id_rsa ~/custom-image/edit/home/ubuntu/.ssh/id_rsa
+# sudo chmod 0600 ~/custom-image/edit/home/ubuntu/.ssh/id_rsa
 
 sudo mkdir -p ~/custom-image/edit/var/lib/postgresql/.ssh
 sudo cp ~/rsync.pub ~/custom-image/edit/var/lib/postgresql/.ssh/authorized_keys
@@ -185,15 +185,14 @@ apt-get update
 apt-get install postgresql postgresql-contrib -y
 
 # Setup directories
-mkdir -p /data
-chown -R postgres:postgres /data
-chmod -R 0700 /data
+mv /recovery.conf /var/lib/postgresql/10/main/recovery.conf
+mkdir -p /var/lib/postgresql/master_wal
+chown -R postgres:postgres /var/lib/postgresql/
 
 # Copy PostgreSQL config files
 mkdir -p /etc/postgresql/10/main/
 mv /postgresql.conf /etc/postgresql/10/main/postgresql.conf
 mv /pg_hba.conf /etc/postgresql/10/main/pg_hba.conf
-mv /recovery.conf /data/recovery.conf
 chown -R postgres:postgres /etc/postgresql/10
 openssl dhparam -out /etc/ssl/dhparam.pem 2048
 
