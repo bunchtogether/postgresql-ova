@@ -1,27 +1,6 @@
 # PostgreSQL v10 OVA
 
-## Post Installation Steps
-
-### Setup Replication Master
-
-```sql
-    -- Create replicator User
-    CREATE ROLE replicator WITH REPLICATION PASSWORD 'REPLICATOR_PASSWORD' LOGIN;
-
-
-```
-
-# Replica Server
-
-Edit `postgresql.conf` and set `hot_standby = on`
-
-Run the following command 
-    ```
-    pg_basebackup -h MASTER_IP_ADDRESS_HERE -D /var/lib/postgresql/10/main/ -P -U replicator --wal-method=stream
-    # Password: Enter your REPLICATOR_PASSWORD here
-
-    ```
-
+Post Installation Steps
 
 # Steps 1 - Update Config files
 
@@ -35,7 +14,6 @@ Edit postgresql.conf and search for `archive_command` and replace REPLICA_IP_ADD
     sudo -u postgres createuser -U postgres replicator -P -c 5 --replication
     # Enter password for new role: // Enter strong password
     # cb0DaK90@43
-
 
 # Step 2 - Update Replica Server
 
@@ -53,7 +31,8 @@ Edit postgresql.conf and search for `hot_standby` and remove the pound sign befo
     rm -rf *
 
     # Copy files /var/lib/postgresql/10/main from master server to replica server with pg_basebackup utility
-    pg_basebackup -h MASTER_SERVER_IP_ADDRESS -D /var/lib/postgresql/10/main/ -P -U replicator --wal-method=stream 
+    pg_basebackup -h MASTER_SERVER_IP_ADDRESS -D /var/lib/postgresql/10/main/ -P -U replicator --wal-method=stream
+    # Password: Enter your REPLICATOR_PASSWORD here 
 
 # Step 4 - Setup recovery.conf
     Copy recover.conf from /etc/postgresql/recovery.conf and un-comment the following files

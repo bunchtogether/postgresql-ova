@@ -185,7 +185,7 @@ apt-get update
 apt-get install postgresql postgresql-contrib -y
 
 # Setup directories
-mv /recovery.conf /var/lib/postgresql/10/main/recovery.conf
+mv /recovery.conf /var/lib/postgresql/recovery.conf
 mkdir -p /var/lib/postgresql/master_wal
 chown -R postgres:postgres /var/lib/postgresql/
 
