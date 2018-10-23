@@ -102,7 +102,7 @@ Documentation=man:postgres(1)
 [Service]
 Type=notify
 User=postgres
-ExecStart=/usr/lib/postgresql/10/bin/postgres -D /etc/postgresql/10/main
+ExecStart=/usr/lib/postgresql/11/bin/postgres -D /var/lib/postgresql/11/main -c config_file=/etc/postgresql/11/main/postgresql.conf
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=mixed
 KillSignal=SIGINT
