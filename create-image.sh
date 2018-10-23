@@ -102,7 +102,7 @@ Documentation=man:postgres(1)
 [Service]
 Type=notify
 User=postgres
-ExecStart=/usr/lib/postgresql/10/bin/postgres -D /etc/postgresql/10/main
+ExecStart=/usr/lib/postgresql/11/bin/postgres -D /etc/postgresql/11/main
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=mixed
 KillSignal=SIGINT
@@ -182,11 +182,11 @@ apt-get -y update
 DEBIAN_FRONTEND=noninteractive apt-get -y install tmpreaper
 mv /etc/custom_tmpreaper.conf /etc/tmpreaper.conf
 
-# Install PostgreSQL v10
+# Install PostgreSQL v11
 wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O - | apt-key add -
 echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list
 apt-get update
-apt-get install postgresql-10 postgresql-contrib -y
+apt-get install postgresql postgresql-contrib -y
 
 # Setup directories
 mv /recovery.conf /var/lib/postgresql/recovery.conf
@@ -194,10 +194,10 @@ mkdir -p /var/lib/postgresql/master_wal
 chown -R postgres:postgres /var/lib/postgresql/
 
 # Copy PostgreSQL config files
-mkdir -p /etc/postgresql/10/main/
-mv /postgresql.conf /etc/postgresql/10/main/postgresql.conf
-mv /pg_hba.conf /etc/postgresql/10/main/pg_hba.conf
-chown -R postgres:postgres /etc/postgresql/10
+mkdir -p /etc/postgresql/11/main/
+mv /postgresql.conf /etc/postgresql/11/main/postgresql.conf
+mv /pg_hba.conf /etc/postgresql/11/main/pg_hba.conf
+chown -R postgres:postgres /etc/postgresql/11
 openssl dhparam -out /etc/ssl/dhparam.pem 2048
 
 echo "session required pam_limits.so" >> /etc/pam.d/common-session
