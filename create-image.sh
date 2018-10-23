@@ -67,6 +67,10 @@ exit 101
 #!/bin/sh
 EOL
 
+# Disable unnattended upgrades
+sudo bash -c "cat >> ~/custom-image/edit/etc/apt/apt.conf.d/10periodic" <<EOL
+APT::Periodic::Unattended-Upgrade "0";
+EOL
 
 sudo bash -c "cat > ~/custom-image/edit/etc/custom_tmpreaper.conf" <<EOL
 SHOWWARNING=false

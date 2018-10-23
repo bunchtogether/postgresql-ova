@@ -22,6 +22,8 @@ ssh -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -p 8022 ubuntu
 
 if [ ! -d "build" ]; then
   mkdir build
+else
+  rm -rf build/*
 fi
 
 scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ubuntu@127.0.0.1:~/ubuntu-postgresql.iso build/ubuntu-postgresql.iso
