@@ -57,16 +57,19 @@ mv "$OUTPUT.2" "$OUTPUT"
 
 sleep 300
 
+"$VMRUN" -T ws stop "$OUTPUT"
+
 cat "$OUTPUT" | sed '/^ide/d' > "$OUTPUT.2"
 bash -c "cat >> \"$OUTPUT.2\"" <<EOL
-ide0:0.present = "FALSE"
-ide0:0.fileName = "$ISO_PATH"
+ide0:0.fileName = emptyBackingString
 ide0:0.deviceType = "cdrom-image"
 ide0:0.startConnected = "FALSE"
 EOL
 mv "$OUTPUT.2" "$OUTPUT"
 
-"$VMRUN" -T ws stop "$OUTPUT"
+
+# cat "$OUTPUT" | sed '/^ide/d' > "$OUTPUT.2"
+# mv "$OUTPUT.2" "$OUTPUT"
 
 "$OVF_TOOL" --acceptAllEulas "$OUTPUT" "$OVA_PATH"
 
