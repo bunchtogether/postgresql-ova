@@ -326,6 +326,7 @@ in-target sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /et
 in-target rm -rf /var/lib/cloud/data ; \
 in-target rm -rf /var/lib/cloud/instance ; \
 in-target rm -rf /var/lib/cloud/instances/* ; \
+in-target sed -i '/^deb cdrom/d' /etc/apt/sources.list ; \
 in-target apt-get update ; \
 in-target apt-get -y upgrade ; \
 in-target apt-get -y dist-upgrade ; \
