@@ -67,6 +67,10 @@ exit 101
 #!/bin/sh
 EOL
 
+# Disable unnattended upgrades
+sudo bash -c "cat >> ~/custom-image/edit/etc/apt/apt.conf.d/10periodic" <<EOL
+APT::Periodic::Unattended-Upgrade "0";
+EOL
 
 sudo bash -c "cat > ~/custom-image/edit/etc/custom_tmpreaper.conf" <<EOL
 SHOWWARNING=false
@@ -182,7 +186,7 @@ mv /etc/custom_tmpreaper.conf /etc/tmpreaper.conf
 wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O - | apt-key add -
 echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list
 apt-get update
-apt-get install postgresql postgresql-contrib -y
+apt-get install postgresql-10 postgresql-contrib -y
 
 # Setup directories
 mv /recovery.conf /var/lib/postgresql/recovery.conf
@@ -322,6 +326,7 @@ in-target sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /et
 in-target rm -rf /var/lib/cloud/data ; \
 in-target rm -rf /var/lib/cloud/instance ; \
 in-target rm -rf /var/lib/cloud/instances/* ; \
+in-target sed -i '/^deb cdrom/d' /etc/apt/sources.list ; \
 in-target apt-get update ; \
 in-target apt-get -y upgrade ; \
 in-target apt-get -y dist-upgrade ; \

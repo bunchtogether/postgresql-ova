@@ -22,6 +22,8 @@ ssh -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -p 8022 ubuntu
 
 if [ ! -d "build" ]; then
   mkdir build
+else
+  rm -rf build/*
 fi
 
 scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ubuntu@127.0.0.1:~/ubuntu-postgresql.iso build/ubuntu-postgresql.iso
@@ -57,16 +59,31 @@ mv "$OUTPUT.2" "$OUTPUT"
 
 sleep 300
 
+
+# Unmount CD-ROM ISO
 cat "$OUTPUT" | sed '/^ide/d' > "$OUTPUT.2"
 bash -c "cat >> \"$OUTPUT.2\"" <<EOL
 ide0:0.present = "FALSE"
-ide0:0.fileName = "$ISO_PATH"
+ide0:0.fileName = emptyBackingString
 ide0:0.deviceType = "cdrom-image"
 ide0:0.startConnected = "FALSE"
 EOL
 mv "$OUTPUT.2" "$OUTPUT"
 
 "$VMRUN" -T ws stop "$OUTPUT"
+
+# Remove CD-ROM
+cat "$OUTPUT" | sed '/^ide/d' > "$OUTPUT.2"
+bash -c "cat >> \"$OUTPUT.2\"" <<EOL
+ide0:0.fileName = emptyBackingString
+ide0:0.deviceType = "cdrom-image"
+ide0:0.startConnected = "FALSE"
+EOL
+mv "$OUTPUT.2" "$OUTPUT"
+
+
+# cat "$OUTPUT" | sed '/^ide/d' > "$OUTPUT.2"
+# mv "$OUTPUT.2" "$OUTPUT"
 
 "$OVF_TOOL" --acceptAllEulas "$OUTPUT" "$OVA_PATH"
 
