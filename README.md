@@ -1,4 +1,4 @@
-# PostgreSQL v10 OVA
+# PostgreSQL v11 OVA
 
 Post Installation Steps
 
@@ -26,12 +26,12 @@ Edit postgresql.conf and search for `hot_standby` and remove the pound sign befo
     # Switch to postgres user
     sudo su postgres
 
-    # Delete all files under `/var/lib/postgresql/10/main` on replica server
-    cd /var/lib/postgresql/10/main/
+    # Delete all files under `/var/lib/postgresql/11/main` on replica server
+    cd /var/lib/postgresql/11/main/
     rm -rf *
 
-    # Copy files /var/lib/postgresql/10/main from master server to replica server with pg_basebackup utility
-    pg_basebackup -h MASTER_SERVER_IP_ADDRESS -D /var/lib/postgresql/10/main/ -P -U replicator --wal-method=stream
+    # Copy files /var/lib/postgresql/11/main from master server to replica server with pg_basebackup utility
+    pg_basebackup -h MASTER_SERVER_IP_ADDRESS -D /var/lib/postgresql/11/main/ -P -U replicator --wal-method=stream
     # Password: Enter your REPLICATOR_PASSWORD here 
 
 # Step 4 - Setup recovery.conf
