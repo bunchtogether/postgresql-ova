@@ -32,7 +32,7 @@ echo "Successfully generated ubuntu-postgresql.iso"
 
 export DIRECTORY=$(pwd)
 export VMRUN=/Applications/VMware\ Fusion.app/Contents/Library/vmrun
-export VERSION=1.0.0
+export VERSION=1.0.1
 export OVF_TOOL=/Applications/VMware\ Fusion.app/Contents/Library/VMware\ OVF\ Tool/ovftool
 export BUILD_NAME=PostgreSQL.$VERSION
 export VM_DIRECTORY=~/Documents/Virtual\ Machines.localized
@@ -85,7 +85,7 @@ mv "$OUTPUT.2" "$OUTPUT"
 # cat "$OUTPUT" | sed '/^ide/d' > "$OUTPUT.2"
 # mv "$OUTPUT.2" "$OUTPUT"
 
-"$OVF_TOOL" --acceptAllEulas "$OUTPUT" "$OVA_PATH"
+"$OVF_TOOL" --shaAlgorithm=SHA1 --acceptAllEulas "$OUTPUT" "$OVA_PATH"
 
 rm -rf ~/Documents/Virtual\ Machines.localized/$BUILD_NAME\ .vmwarevm
 
