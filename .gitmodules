@@ -1,0 +1,3 @@
+[submodule "ova-generator"]
+	path = ova-generator
+	url = https://github.com/bunchtogether/ova-generator
