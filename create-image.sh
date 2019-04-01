@@ -20,8 +20,8 @@ sudo tlsdate -s -H mail.google.com
 sudo timedatectl set-local-rtc false
 timedatectl
 
-# aria2c --seed-time=0 --summary-interval=3 http://releases.ubuntu.com/16.04.5/ubuntu-16.04.5-server-amd64.iso.torrent
-aria2c -x 16 -s 16 -k 4M -o ubuntu-16.04.5-server-amd64.iso http://releases.ubuntu.com/16.04.5/ubuntu-16.04.5-server-amd64.iso
+# aria2c --seed-time=0 --summary-interval=3 http://releases.ubuntu.com/16.04.5/ubuntu-16.04.6-server-amd64.iso.torrent
+aria2c -x 16 -s 16 -k 4M -o ubuntu-16.04.6-server-amd64.iso http://releases.ubuntu.com/16.04/ubuntu-16.04.6-server-amd64.iso
 
 mkdir mnt
 sudo mount -o loop ~/custom-image/ubuntu*.iso mnt
@@ -87,7 +87,7 @@ Description=Glances
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/glances -C /glances.conf -w --percpu -p 80 --fs-free-space --disable-check-update --hide-kernel-threads --time 1 
+ExecStart=/usr/local/bin/glances -C /glances.conf -w --percpu -p 80 --fs-free-space --disable-check-update --hide-kernel-threads --time 1
 Restart=on-abort
 
 [Install]
@@ -175,7 +175,7 @@ apt-get update -y --fix-missing
 apt-get install -y python3-pip
 
 # Install Glances
-pip3 install 'glances[action,browser,cloud,cpuinfo,chart,folders,ip,raid,web]' 
+pip3 install 'glances[action,browser,cloud,cpuinfo,chart,folders,ip,raid,web]'
 
 # Install tmpreaper
 apt-get -y update
