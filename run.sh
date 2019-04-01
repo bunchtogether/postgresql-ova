@@ -30,63 +30,12 @@ scp -i ./credentials/ubuntu_vm_id_rsa -o StrictHostKeyChecking=no -P 8022 ubuntu
 
 echo "Successfully generated ubuntu-postgresql.iso"
 
+
+
+export POSTGRES_OVA_VERSION=1.0.1
 export DIRECTORY=$(pwd)
-export VMRUN=/Applications/VMware\ Fusion.app/Contents/Library/vmrun
-export VERSION=1.0.1
-export OVF_TOOL=/Applications/VMware\ Fusion.app/Contents/Library/VMware\ OVF\ Tool/ovftool
-export BUILD_NAME=PostgreSQL.$VERSION
-export VM_DIRECTORY=~/Documents/Virtual\ Machines.localized
-export BASELINE=$VM_DIRECTORY/OVA\ Baseline.vmwarevm/OVA\ Baseline.vmx
-export OUTPUT=$VM_DIRECTORY/$BUILD_NAME.vmwarevm/$BUILD_NAME.vmx
 export ISO_PATH=$DIRECTORY/build/ubuntu-postgresql.iso
-export OVA_PATH=$DIRECTORY/build/PostgreSQL.$VERSION.ova
-
-rm -rf ~/Documents/Virtual\ Machines.localized/$BUILD_NAME.vmwarevm
-mkdir ~/Documents/Virtual\ Machines.localized/$BUILD_NAME.vmwarevm
-
-"$VMRUN" -T ws clone "$BASELINE" "$OUTPUT" -cloneName=$BUILD_NAME full
-
-cat "$OUTPUT" | sed '/^ide/d' > "$OUTPUT.2"
-bash -c "cat >> \"$OUTPUT.2\"" <<EOL
-ide0:0.present = "TRUE"
-ide0:0.fileName = "$ISO_PATH"
-ide0:0.deviceType = "cdrom-image"
-ide0:0.startConnected = "TRUE"
-EOL
-mv "$OUTPUT.2" "$OUTPUT"
-
-"$VMRUN" -T ws start "$OUTPUT"
-
-sleep 300
-
-
-# Unmount CD-ROM ISO
-cat "$OUTPUT" | sed '/^ide/d' > "$OUTPUT.2"
-bash -c "cat >> \"$OUTPUT.2\"" <<EOL
-ide0:0.present = "FALSE"
-ide0:0.fileName = emptyBackingString
-ide0:0.deviceType = "cdrom-image"
-ide0:0.startConnected = "FALSE"
-EOL
-mv "$OUTPUT.2" "$OUTPUT"
-
-"$VMRUN" -T ws stop "$OUTPUT"
-
-# Remove CD-ROM
-cat "$OUTPUT" | sed '/^ide/d' > "$OUTPUT.2"
-bash -c "cat >> \"$OUTPUT.2\"" <<EOL
-ide0:0.fileName = emptyBackingString
-ide0:0.deviceType = "cdrom-image"
-ide0:0.startConnected = "FALSE"
-EOL
-mv "$OUTPUT.2" "$OUTPUT"
-
-
-# cat "$OUTPUT" | sed '/^ide/d' > "$OUTPUT.2"
-# mv "$OUTPUT.2" "$OUTPUT"
-
-"$OVF_TOOL" --shaAlgorithm=SHA1 --acceptAllEulas "$OUTPUT" "$OVA_PATH"
-
-rm -rf ~/Documents/Virtual\ Machines.localized/$BUILD_NAME\ .vmwarevm
-
-echo "Finished creating PostgreSQL $VERSION OVA"
+export OVA_PATH=$DIRECTORY/build/PostgreSQL.$POSTGRES_OVA_VERSION.ova
+cd ./ova-generator
+./run.sh PostgreSQL $POSTGRES_OVA_VERSION $ISO_PATH $OVA_PATH
+echo "Finished creating PostgreSQL $POSTGRES_OVA_VERSION OVA"
