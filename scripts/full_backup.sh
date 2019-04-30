@@ -2,7 +2,7 @@
 
 
 if [ $# -lt 2 ]; then
-  echo -e "\nUsage:\n\t $0 <POSTGRES_IP> <POSTGRES_SSH_KEY>\n"
+  echo -e "\nUsage:\n\t $0 <POSTGRES_IP> <POSTGRES_SSH_KEY> <OPTIONAL DATABASE_NAME>\n"
   exit 1
 fi
 
